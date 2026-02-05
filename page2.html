@@ -770,6 +770,22 @@
             if (textDiv.classList.contains('collapsed')) {
                 textDiv.classList.remove('collapsed');
                 textDiv.textContent = commentary.commentary;
+                
+                // Check if there's a note for this commentary
+                const notes = JSON.parse(localStorage.getItem('commentaryNotes') || '[]');
+                const noteKey = `${commentary.book}|${commentary.reference}`;
+                const existingNote = notes.find(n => n.commentaryKey === noteKey);
+                
+                if (existingNote) {
+                    const noteDiv = document.createElement('div');
+                    noteDiv.style.cssText = 'margin-top: 1.5rem; padding: 1rem; background: #fff9e6; border-left: 4px solid #f39c12; border-radius: 6px;';
+                    noteDiv.innerHTML = `
+                        <div style="font-weight: 700; color: #e67e22; margin-bottom: 0.5rem; font-size: 0.95rem;">📝 My Note:</div>
+                        <div style="color: #555; font-style: italic; line-height: 1.6;">${existingNote.text}</div>
+                    `;
+                    textDiv.appendChild(noteDiv);
+                }
+                
                 textDiv.nextElementSibling.textContent = 'Read Less';
             } else {
                 textDiv.classList.add('collapsed');
