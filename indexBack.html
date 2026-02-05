@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barclay Bible Commentaries</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --bg-color: #ecf0f1;
+            --text-color: #2c3e50;
+            --card-bg: #ffffff;
+            --border-color: #bdc3c7;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .search-section {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-box input,
+        .search-box select {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus,
+        .search-box select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+
+        .search-box button {
+            padding: 0.75rem 1.5rem;
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            white-space: nowrap;
+        }
+
+        .search-box button:hover {
+            background: #2980b9;
+        }
+
+        .stats {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 2rem 0 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .results-count {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .sort-options {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .sort-options select {
+            padding: 0.5rem;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .commentary-list {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .commentary-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .commentary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .commentary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+
+        .commentary-reference {
+            font-weight: 700;
+            color: var(--secondary-color);
+            font-size: 1.2rem;
+        }
+
+        .commentary-book {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .commentary-title {
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .commentary-text {
+            color: #555;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        .commentary-text.collapsed {
+            max-height: 150px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .commentary-text.collapsed::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: linear-gradient(transparent, var(--card-bg));
+        }
+
+        .read-more {
+            color: var(--secondary-color);
+            font-weight: 600;
+            margin-top: 0.5rem;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .read-more:hover {
+            text-decoration: underline;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #7f8c8d;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: #7f8c8d;
+            background: var(--card-bg);
+            border-radius: 12px;
+        }
+
+        .no-results h3 {
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .search-box input,
+            .search-box select {
+                min-width: 100%;
+            }
+
+            .commentary-header {
+                flex-direction: column;
+            }
+
+            .results-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
+        }
+
+        .pagination button.active {
+            background: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📖 Barclay Bible Commentaries</h1>
+        <p>Explore 1,980 commentary entries from William Barclay's Daily Study Bible</p>
+    </div>
+
+    <div class="container">
+        <div class="search-section">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search commentaries...">
+                <select id="bookFilter">
+                    <option value="">All Books</option>
+                </select>
+                <button onclick="filterCommentaries()">Search</button>
+                <button onclick="clearFilters()" style="background: #95a5a6;">Clear</button>
+            </div>
+            <div class="stats">
+                <span id="totalEntries">Loading...</span>
+                <span>•</span>
+                <span id="uniqueBooks">Loading books...</span>
+            </div>
+        </div>
+
+        <div class="results-header">
+            <div class="results-count" id="resultsCount">Loading commentaries...</div>
+            <div class="sort-options">
+                <label for="sortSelect">Sort by:</label>
+                <select id="sortSelect" onchange="sortCommentaries()">
+                    <option value="reference">Reference</option>
+                    <option value="book">Book Title</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="commentaryList" class="commentary-list">
+            <div class="loading">Loading commentaries</div>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <script>
+        let allCommentaries = [];
+        let filteredCommentaries = [];
+        let currentPage = 1;
+        const itemsPerPage = 20;
+
+        // Load CSV data
+        async function loadCommentaries() {
+            try {
+                console.log('Starting to load commentaries...');
+                const response = await fetch('commentaries.csv');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const csvText = await response.text();
+                console.log('CSV file loaded, size:', csvText.length, 'bytes');
+                
+                // Parse CSV properly handling quoted fields with newlines
+                allCommentaries = parseCSV(csvText);
+                console.log('Parsed commentaries:', allCommentaries.length);
+                console.log('First entry:', allCommentaries[0]);
+                
+                filteredCommentaries = [...allCommentaries];
+                populateBookFilter();
+                updateStats();
+                displayCommentaries();
+            } catch (error) {
+                console.error('Error loading commentaries:', error);
+                document.getElementById('commentaryList').innerHTML = 
+                    `<div class="no-results"><h3>Error loading commentaries</h3><p>${error.message}</p><p>Please ensure commentaries.csv is in the same directory as index.html</p></div>`;
+            }
+        }
+
+        function parseCSV(text) {
+            const rows = [];
+            let currentRow = [];
+            let currentField = '';
+            let inQuotes = false;
+            let isFirstRow = true;
+            
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const nextChar = text[i + 1];
+                
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        // Escaped quote
+                        currentField += '"';
+                        i++;
+                    } else {
+                        // Toggle quote state
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    // Field separator
+                    currentRow.push(currentField.trim());
+                    currentField = '';
+                } else if ((char === '\n' || char === '\r') && !inQuotes) {
+                    // Row separator (handle both \n and \r\n)
+                    if (char === '\r' && nextChar === '\n') {
+                        i++; // Skip the \n in \r\n
+                    }
+                    
+                    if (currentField || currentRow.length > 0) {
+                        currentRow.push(currentField.trim());
+                        
+                        // Skip header row
+                        if (!isFirstRow && currentRow.length >= 4) {
+                            rows.push({
+                                book: currentRow[0],
+                                reference: currentRow[1],
+                                title: currentRow[2],
+                                commentary: currentRow[3]
+                            });
+                        }
+                        
+                        isFirstRow = false;
+                        currentRow = [];
+                        currentField = '';
+                    }
+                } else {
+                    currentField += char;
+                }
+            }
+            
+            // Handle last row if no trailing newline
+            if (currentField || currentRow.length > 0) {
+                currentRow.push(currentField.trim());
+                if (!isFirstRow && currentRow.length >= 4) {
+                    rows.push({
+                        book: currentRow[0],
+                        reference: currentRow[1],
+                        title: currentRow[2],
+                        commentary: currentRow[3]
+                    });
+                }
+            }
+            
+            return rows;
+        }
+
+        function populateBookFilter() {
+            const books = [...new Set(allCommentaries.map(c => c.book))].sort();
+            const select = document.getElementById('bookFilter');
+            
+            books.forEach(book => {
+                const option = document.createElement('option');
+                option.value = book;
+                option.textContent = book;
+                select.appendChild(option);
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('totalEntries').textContent = 
+                `${allCommentaries.length} total entries`;
+            
+            const uniqueBooks = new Set(allCommentaries.map(c => c.book)).size;
+            document.getElementById('uniqueBooks').textContent = 
+                `${uniqueBooks} unique sections`;
+        }
+
+        function filterCommentaries() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const selectedBook = document.getElementById('bookFilter').value;
+            
+            console.log('Filtering with:', { searchTerm, selectedBook, totalEntries: allCommentaries.length });
+            
+            filteredCommentaries = allCommentaries.filter(commentary => {
+                const matchesSearch = !searchTerm || 
+                    (commentary.reference && commentary.reference.toLowerCase().includes(searchTerm)) ||
+                    (commentary.book && commentary.book.toLowerCase().includes(searchTerm)) ||
+                    (commentary.title && commentary.title.toLowerCase().includes(searchTerm)) ||
+                    (commentary.commentary && commentary.commentary.toLowerCase().includes(searchTerm));
+                
+                const matchesBook = !selectedBook || commentary.book === selectedBook;
+                
+                return matchesSearch && matchesBook;
+            });
+            
+            console.log('Filtered results:', filteredCommentaries.length);
+            
+            currentPage = 1;
+            displayCommentaries();
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('bookFilter').value = '';
+            filteredCommentaries = [...allCommentaries];
+            currentPage = 1;
+            displayCommentaries();
+        }
+
+        function sortCommentaries() {
+            const sortBy = document.getElementById('sortSelect').value;
+            
+            filteredCommentaries.sort((a, b) => {
+                if (sortBy === 'reference') {
+                    return a.reference.localeCompare(b.reference);
+                } else {
+                    return a.book.localeCompare(b.book);
+                }
+            });
+            
+            displayCommentaries();
+        }
+
+        function displayCommentaries() {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageCommentaries = filteredCommentaries.slice(startIndex, endIndex);
+            
+            document.getElementById('resultsCount').textContent = 
+                `Showing ${startIndex + 1}-${Math.min(endIndex, filteredCommentaries.length)} of ${filteredCommentaries.length} commentaries`;
+            
+            const listDiv = document.getElementById('commentaryList');
+            
+            if (pageCommentaries.length === 0) {
+                listDiv.innerHTML = 
+                    '<div class="no-results"><h3>No commentaries found</h3><p>Try adjusting your search criteria.</p></div>';
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+            
+            listDiv.innerHTML = pageCommentaries.map((commentary, index) => {
+                const shortText = commentary.commentary.substring(0, 500);
+                const needsReadMore = commentary.commentary.length > 500;
+                
+                return `
+                    <div class="commentary-card">
+                        <div class="commentary-header">
+                            <div class="commentary-reference">${escapeHtml(commentary.reference)}</div>
+                            <div class="commentary-book">${escapeHtml(commentary.book)}</div>
+                        </div>
+                        ${commentary.title ? `<div class="commentary-title">${escapeHtml(commentary.title)}</div>` : ''}
+                        <div class="commentary-text ${needsReadMore ? 'collapsed' : ''}" id="text-${startIndex + index}">
+                            ${escapeHtml(needsReadMore ? shortText + '...' : commentary.commentary)}
+                        </div>
+                        ${needsReadMore ? `<div class="read-more" onclick="toggleReadMore(${startIndex + index})">Read More</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            displayPagination();
+        }
+
+        function toggleReadMore(index) {
+            const textDiv = document.getElementById(`text-${index}`);
+            const commentary = filteredCommentaries[index];
+            
+            if (textDiv.classList.contains('collapsed')) {
+                textDiv.classList.remove('collapsed');
+                textDiv.textContent = commentary.commentary;
+                textDiv.nextElementSibling.textContent = 'Read Less';
+            } else {
+                textDiv.classList.add('collapsed');
+                textDiv.textContent = commentary.commentary.substring(0, 500) + '...';
+                textDiv.nextElementSibling.textContent = 'Read More';
+            }
+        }
+
+        function displayPagination() {
+            const totalPages = Math.ceil(filteredCommentaries.length / itemsPerPage);
+            const paginationDiv = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                paginationDiv.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            
+            // Previous button
+            html += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>← Previous</button>`;
+            
+            // Page numbers
+            const maxVisible = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+            
+            if (endPage - startPage < maxVisible - 1) {
+                startPage = Math.max(1, endPage - maxVisible + 1);
+            }
+            
+            if (startPage > 1) {
+                html += `<button onclick="changePage(1)">1</button>`;
+                if (startPage > 2) html += `<button disabled>...</button>`;
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button onclick="changePage(${i})" ${i === currentPage ? 'class="active"' : ''}>${i}</button>`;
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) html += `<button disabled>...</button>`;
+                html += `<button onclick="changePage(${totalPages})">${totalPages}</button>`;
+            }
+            
+            // Next button
+            html += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next →</button>`;
+            
+            paginationDiv.innerHTML = html;
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredCommentaries.length / itemsPerPage);
+            if (page < 1 || page > totalPages) return;
+            
+            currentPage = page;
+            displayCommentaries();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Search on Enter key
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                filterCommentaries();
+            }
+        });
+
+        // Load commentaries on page load
+        loadCommentaries();
+    </script>
+</body>
+</html>
