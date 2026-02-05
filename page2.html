@@ -731,14 +731,14 @@
 
             resultsList.innerHTML = searchResults.map((c, index) => {
                 // Escape HTML first for safety
-                let displayTitle = escapeHtml(c.title);
+                let displayBook = escapeHtml(c.book);
                 let displayText = escapeHtml(c.commentary);
                 let displayRef = escapeHtml(c.reference);
 
                 // Then add highlighting if there are keywords
                 if (keywords) {
                     const regex = new RegExp(`(${keywords.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-                    displayTitle = displayTitle.replace(regex, '<span class="highlight">$1</span>');
+                    displayBook = displayBook.replace(regex, '<span class="highlight">$1</span>');
                     displayText = displayText.replace(regex, '<span class="highlight">$1</span>');
                     displayRef = displayRef.replace(regex, '<span class="highlight">$1</span>');
                 }
@@ -750,7 +750,7 @@
                     <div class="commentary-card">
                         <div class="commentary-header">
                             <div class="commentary-reference">${displayRef}</div>
-                            ${c.title ? `<div class="commentary-book">${displayTitle}</div>` : ''}
+                            ${c.book ? `<div class="commentary-book">${displayBook}</div>` : ''}
                         </div>
                         <div class="commentary-text collapsed" id="text-${index}">
                             ${displayText}
