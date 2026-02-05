@@ -244,19 +244,7 @@
         }
 
         .commentary-text.collapsed {
-            max-height: 150px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .commentary-text.collapsed::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 50px;
-            background: linear-gradient(transparent, var(--card-bg));
+            /* Collapsed state handled by JavaScript truncation */
         }
 
         .read-more {
@@ -711,6 +699,8 @@
             commentaryList.innerHTML = pageCommentaries.map((c, index) => {
                 const noteKey = `${c.book}|${c.reference}`;
                 const hasNote = notes.some(n => n.commentaryKey === noteKey);
+                const shortText = c.commentary.substring(0, 500);
+                const needsReadMore = c.commentary.length > 500;
                 
                 return `
                 <div class="commentary-card">
@@ -718,17 +708,14 @@
                         <div class="commentary-reference">${escapeHtml(c.reference)}</div>
                         ${c.book ? `<div class="commentary-book">${escapeHtml(c.book)}</div>` : ''}
                     </div>
-                    <div class="commentary-text collapsed" id="text-${startIndex + index}">
-                        ${escapeHtml(c.commentary)}
+                    ${c.title ? `<div class="commentary-title">${escapeHtml(c.title)}</div>` : ''}
+                    <div class="commentary-text ${needsReadMore ? 'collapsed' : ''}" id="text-${startIndex + index}">
+                        ${escapeHtml(needsReadMore ? shortText + '...' : c.commentary)}
                     </div>
-                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-top: 0.75rem;">
-                        <div class="read-more" onclick="toggleReadMore(${startIndex + index})">
-                            Read more →
-                        </div>
-                        <button class="note-button ${hasNote ? 'has-note' : ''}" onclick="openNoteModal(${index})">
-                            ${hasNote ? '📝 Edit Note' : '➕ Add Note'}
-                        </button>
-                    </div>
+                    ${needsReadMore ? `<div class="read-more" onclick="toggleReadMore(${startIndex + index})">Read More</div>` : ''}
+                    <button class="note-button ${hasNote ? 'has-note' : ''}" onclick="openNoteModal(${index})" style="margin-top: 0.5rem;">
+                        ${hasNote ? '📝 Edit Note' : '➕ Add Note'}
+                    </button>
                 </div>
             `;
             }).join('');
@@ -770,15 +757,17 @@
         }
 
         function toggleReadMore(index) {
-            const textElement = document.getElementById(`text-${index}`);
-            const isCollapsed = textElement.classList.contains('collapsed');
+            const textDiv = document.getElementById(`text-${index}`);
+            const commentary = filteredCommentaries[index];
             
-            if (isCollapsed) {
-                textElement.classList.remove('collapsed');
-                event.target.textContent = '← Read less';
+            if (textDiv.classList.contains('collapsed')) {
+                textDiv.classList.remove('collapsed');
+                textDiv.textContent = commentary.commentary;
+                textDiv.nextElementSibling.textContent = 'Read Less';
             } else {
-                textElement.classList.add('collapsed');
-                event.target.textContent = 'Read more →';
+                textDiv.classList.add('collapsed');
+                textDiv.textContent = commentary.commentary.substring(0, 500) + '...';
+                textDiv.nextElementSibling.textContent = 'Read More';
             }
         }
 

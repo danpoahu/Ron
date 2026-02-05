@@ -258,19 +258,7 @@
         }
 
         .commentary-text.collapsed {
-            max-height: 150px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .commentary-text.collapsed::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 50px;
-            background: linear-gradient(transparent, var(--card-bg));
+            /* Collapsed state handled by JavaScript truncation */
         }
 
         .read-more {
@@ -732,8 +720,12 @@
             resultsList.innerHTML = searchResults.map((c, index) => {
                 // Escape HTML first for safety
                 let displayBook = escapeHtml(c.book);
-                let displayText = escapeHtml(c.commentary);
                 let displayRef = escapeHtml(c.reference);
+                let displayTitle = c.title ? escapeHtml(c.title) : '';
+                
+                const shortText = c.commentary.substring(0, 500);
+                const needsReadMore = c.commentary.length > 500;
+                let displayText = escapeHtml(needsReadMore ? shortText + '...' : c.commentary);
 
                 // Then add highlighting if there are keywords
                 if (keywords) {
@@ -741,6 +733,9 @@
                     displayBook = displayBook.replace(regex, '<span class="highlight">$1</span>');
                     displayText = displayText.replace(regex, '<span class="highlight">$1</span>');
                     displayRef = displayRef.replace(regex, '<span class="highlight">$1</span>');
+                    if (displayTitle) {
+                        displayTitle = displayTitle.replace(regex, '<span class="highlight">$1</span>');
+                    }
                 }
 
                 const noteKey = `${c.book}|${c.reference}`;
@@ -752,17 +747,14 @@
                             <div class="commentary-reference">${displayRef}</div>
                             ${c.book ? `<div class="commentary-book">${displayBook}</div>` : ''}
                         </div>
-                        <div class="commentary-text collapsed" id="text-${index}">
+                        ${c.title ? `<div class="commentary-title">${displayTitle}</div>` : ''}
+                        <div class="commentary-text ${needsReadMore ? 'collapsed' : ''}" id="text-${index}">
                             ${displayText}
                         </div>
-                        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-top: 0.75rem;">
-                            <div class="read-more" onclick="toggleReadMore(${index})">
-                                Read more →
-                            </div>
-                            <button class="note-button ${hasNote ? 'has-note' : ''}" onclick="openNoteModal(${index})">
-                                ${hasNote ? '📝 Edit Note' : '➕ Add Note'}
-                            </button>
-                        </div>
+                        ${needsReadMore ? `<div class="read-more" onclick="toggleReadMore(${index})">Read More</div>` : ''}
+                        <button class="note-button ${hasNote ? 'has-note' : ''}" onclick="openNoteModal(${index})" style="margin-top: 0.5rem;">
+                            ${hasNote ? '📝 Edit Note' : '➕ Add Note'}
+                        </button>
                     </div>
                 `;
             }).join('');
@@ -772,15 +764,17 @@
         }
 
         function toggleReadMore(index) {
-            const textElement = document.getElementById(`text-${index}`);
-            const isCollapsed = textElement.classList.contains('collapsed');
+            const textDiv = document.getElementById(`text-${index}`);
+            const commentary = searchResults[index];
             
-            if (isCollapsed) {
-                textElement.classList.remove('collapsed');
-                event.target.textContent = '← Read less';
+            if (textDiv.classList.contains('collapsed')) {
+                textDiv.classList.remove('collapsed');
+                textDiv.textContent = commentary.commentary;
+                textDiv.nextElementSibling.textContent = 'Read Less';
             } else {
-                textElement.classList.add('collapsed');
-                event.target.textContent = 'Read more →';
+                textDiv.classList.add('collapsed');
+                textDiv.textContent = commentary.commentary.substring(0, 500) + '...';
+                textDiv.nextElementSibling.textContent = 'Read More';
             }
         }
 
