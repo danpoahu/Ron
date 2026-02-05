@@ -695,6 +695,9 @@
             // Get existing notes
             const notes = JSON.parse(localStorage.getItem('commentaryNotes') || '[]');
 
+            // Store commentaries for note modal access
+            window.currentPageCommentaries = pageCommentaries;
+
             // Display commentaries
             commentaryList.innerHTML = pageCommentaries.map((c, index) => {
                 const noteKey = `${c.book}|${c.reference}`;
@@ -714,7 +717,7 @@
                         <div class="read-more" onclick="toggleReadMore(${startIndex + index})">
                             Read more →
                         </div>
-                        <button class="note-button ${hasNote ? 'has-note' : ''}" onclick='openNoteModal(${JSON.stringify(c)})'>
+                        <button class="note-button ${hasNote ? 'has-note' : ''}" onclick="openNoteModal(${index})">
                             ${hasNote ? '📝 Edit Note' : '➕ Add Note'}
                         </button>
                     </div>
@@ -781,18 +784,18 @@
         // Note Modal Functions
         let currentCommentary = null;
 
-        function openNoteModal(commentary) {
-            currentCommentary = commentary;
+        function openNoteModal(index) {
+            currentCommentary = window.currentPageCommentaries[index];
             const modal = document.getElementById('noteModal');
             const modalReference = document.getElementById('modalReference');
             const existingNoteContainer = document.getElementById('existingNoteContainer');
             const noteText = document.getElementById('modalNoteText');
 
-            modalReference.textContent = `${commentary.book} - ${commentary.reference}`;
+            modalReference.textContent = `${currentCommentary.book} - ${currentCommentary.reference}`;
 
             // Check for existing note
             const notes = JSON.parse(localStorage.getItem('commentaryNotes') || '[]');
-            const noteKey = `${commentary.book}|${commentary.reference}`;
+            const noteKey = `${currentCommentary.book}|${currentCommentary.reference}`;
             const existingNote = notes.find(n => n.commentaryKey === noteKey);
 
             if (existingNote) {
