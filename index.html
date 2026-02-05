@@ -717,9 +717,7 @@
                 <div class="commentary-card">
                     <div class="commentary-header">
                         <div class="commentary-reference">${escapeHtml(c.reference)}</div>
-                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                            ${c.title ? `<div class="commentary-title-badge">${escapeHtml(c.title)}</div>` : ''}
-                        </div>
+                        ${c.title ? `<div class="commentary-book">${escapeHtml(c.title)}</div>` : ''}
                     </div>
                     <div class="commentary-text collapsed" id="text-${startIndex + index}">
                         ${escapeHtml(c.commentary)}

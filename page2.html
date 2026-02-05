@@ -751,9 +751,7 @@
                     <div class="commentary-card">
                         <div class="commentary-header">
                             <div class="commentary-reference">${displayRef}</div>
-                            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                                ${c.title ? `<div class="commentary-title-badge">${displayTitle}</div>` : ''}
-                            </div>
+                            ${c.title ? `<div class="commentary-book">${displayTitle}</div>` : ''}
                         </div>
                         <div class="commentary-text collapsed" id="text-${index}">
                             ${displayText}
