@@ -706,12 +706,12 @@
                 return `
                 <div class="commentary-card">
                     <div class="commentary-header">
-                        <div class="commentary-reference">${c.reference}</div>
-                        <div class="commentary-book">${c.book}</div>
+                        <div class="commentary-reference">${escapeHtml(c.reference)}</div>
+                        <div class="commentary-book">${escapeHtml(c.book)}</div>
                     </div>
-                    ${c.title ? `<div class="commentary-title">${c.title}</div>` : ''}
+                    ${c.title ? `<div class="commentary-title">${escapeHtml(c.title)}</div>` : ''}
                     <div class="commentary-text collapsed" id="text-${startIndex + index}">
-                        ${c.commentary}
+                        ${escapeHtml(c.commentary)}
                     </div>
                     <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
                         <div class="read-more" onclick="toggleReadMore(${startIndex + index})">
@@ -772,6 +772,12 @@
                 textElement.classList.add('collapsed');
                 event.target.textContent = 'Read more →';
             }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         // Search on Enter key

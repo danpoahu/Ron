@@ -721,15 +721,18 @@
             window.currentSearchResults = searchResults;
 
             resultsList.innerHTML = searchResults.map((c, index) => {
-                let highlightedTitle = c.title;
-                let highlightedText = c.commentary;
-                let highlightedRef = c.reference;
+                // Escape HTML first for safety
+                let displayTitle = escapeHtml(c.title);
+                let displayText = escapeHtml(c.commentary);
+                let displayRef = escapeHtml(c.reference);
+                let displayBook = escapeHtml(c.book);
 
+                // Then add highlighting if there are keywords
                 if (keywords) {
-                    const regex = new RegExp(`(${keywords})`, 'gi');
-                    highlightedTitle = c.title.replace(regex, '<span class="highlight">$1</span>');
-                    highlightedText = c.commentary.replace(regex, '<span class="highlight">$1</span>');
-                    highlightedRef = c.reference.replace(regex, '<span class="highlight">$1</span>');
+                    const regex = new RegExp(`(${keywords.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                    displayTitle = displayTitle.replace(regex, '<span class="highlight">$1</span>');
+                    displayText = displayText.replace(regex, '<span class="highlight">$1</span>');
+                    displayRef = displayRef.replace(regex, '<span class="highlight">$1</span>');
                 }
 
                 const noteKey = `${c.book}|${c.reference}`;
@@ -738,12 +741,12 @@
                 return `
                     <div class="commentary-card">
                         <div class="commentary-header">
-                            <div class="commentary-reference">${highlightedRef}</div>
-                            <div class="commentary-book">${c.book}</div>
+                            <div class="commentary-reference">${displayRef}</div>
+                            <div class="commentary-book">${displayBook}</div>
                         </div>
-                        ${c.title ? `<div class="commentary-title">${highlightedTitle}</div>` : ''}
+                        ${c.title ? `<div class="commentary-title">${displayTitle}</div>` : ''}
                         <div class="commentary-text collapsed" id="text-${index}">
-                            ${highlightedText}
+                            ${displayText}
                         </div>
                         <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
                             <div class="read-more" onclick="toggleReadMore(${index})">
@@ -772,6 +775,12 @@
                 textElement.classList.add('collapsed');
                 event.target.textContent = 'Read more →';
             }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         function resetSearch() {
