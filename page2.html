@@ -474,7 +474,7 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="bookSelect">Filter by Book</label>
+                    <label for="bookSelect">Book of the Bible</label>
                     <select id="bookSelect">
                         <option value="">All Books</option>
                     </select>
@@ -615,14 +615,40 @@
             return result;
         }
 
+        // Map of reference abbreviations to full Bible book names
+        const bibleBookNames = {
+            'Matt': 'Matthew', 'Mark': 'Mark', 'Luke': 'Luke', 'John': 'John',
+            'Acts': 'Acts', 'Roma': 'Romans', '1Cor': '1 Corinthians', '2Cor': '2 Corinthians',
+            'Gala': 'Galatians', 'Ephe': 'Ephesians', 'Phil': 'Philippians', 'Colo': 'Colossians',
+            '1The': '1 Thessalonians', '2The': '2 Thessalonians', '1Tim': '1 Timothy', '2Tim': '2 Timothy',
+            'Titu': 'Titus', 'Phle': 'Philemon', 'Hebr': 'Hebrews', 'Hebrews': 'Hebrews',
+            'Jame': 'James', '1Pet': '1 Peter', '2Pet': '2 Peter',
+            '1Joh': '1 John', '2Joh': '2 John', '3Joh': '3 John',
+            'Jude': 'Jude', 'Reve': 'Revelation', 'Jere': 'Jeremiah'
+        };
+
+        // Standard Bible book order for sorting
+        const bibleBookOrder = [
+            'Matt','Mark','Luke','John','Acts','Roma','1Cor','2Cor','Gala','Ephe','Phil','Colo',
+            '1The','2The','1Tim','2Tim','Titu','Phle','Hebr','Hebrews','Jame','1Pet','2Pet',
+            '1Joh','2Joh','3Joh','Jude','Reve','Jere'
+        ];
+
+        function getBibleBook(reference) {
+            const m = reference.match(/^([A-Za-z0-9]+)/);
+            return m ? m[1] : '';
+        }
+
         function initializeApp() {
-            // Populate book filter
-            const books = [...new Set(allCommentaries.map(c => c.book))].sort();
+            // Populate book filter with Bible books found in the data
+            const booksInData = [...new Set(allCommentaries.map(c => getBibleBook(c.reference)))].filter(Boolean);
+            booksInData.sort((a, b) => bibleBookOrder.indexOf(a) - bibleBookOrder.indexOf(b));
+
             const bookSelect = document.getElementById('bookSelect');
-            books.forEach(book => {
+            booksInData.forEach(abbr => {
                 const option = document.createElement('option');
-                option.value = book;
-                option.textContent = book;
+                option.value = abbr;
+                option.textContent = bibleBookNames[abbr] || abbr;
                 bookSelect.appendChild(option);
             });
         }
@@ -640,8 +666,8 @@
 
             // Filter commentaries
             searchResults = allCommentaries.filter(c => {
-                // Book filter
-                if (bookFilter && c.book !== bookFilter) {
+                // Book filter (matches Bible book in reference)
+                if (bookFilter && getBibleBook(c.reference) !== bookFilter) {
                     return false;
                 }
 
@@ -825,7 +851,7 @@
             const searchRecord = {
                 timestamp: new Date().toISOString(),
                 keywords: keywords || 'Any',
-                book: book || 'All Books',
+                book: (book && bibleBookNames[book]) ? bibleBookNames[book] : (book || 'All Books'),
                 reference: reference || 'Any',
                 resultCount: resultCount
             };
