@@ -327,13 +327,7 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
-    
-        .highlight {
-            background: #fff3a6;
-            padding: 0 2px;
-            border-radius: 3px;
-        }
-</style>
+    </style>
 </head>
 <body>
     <div class="header">
@@ -528,22 +522,18 @@
         }
 
         function filterCommentaries() {
-            const searchTerms = getSearchTerms().map(t => t.toLowerCase());
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const selectedBook = document.getElementById('bookFilter').value;
             
-            console.log('Filtering with:', { searchTerms, selectedBook, totalEntries: allCommentaries.length });
+            console.log('Filtering with:', { searchTerm, selectedBook, totalEntries: allCommentaries.length });
             
             filteredCommentaries = allCommentaries.filter(commentary => {
-                const matchesSearch = (searchTerms.length === 0) || (() => {
-                    const ref = (commentary.reference || '').toLowerCase();
-                    const book = (commentary.book || '').toLowerCase();
-                    const title = (commentary.title || '').toLowerCase();
-                    const body = (commentary.commentary || '').toLowerCase();
-                    return searchTerms.some(t =>
-                        ref.includes(t) || book.includes(t) || title.includes(t) || body.includes(t)
-                    );
-                })();
-
+                const matchesSearch = !searchTerm || 
+                    (commentary.reference && commentary.reference.toLowerCase().includes(searchTerm)) ||
+                    (commentary.book && commentary.book.toLowerCase().includes(searchTerm)) ||
+                    (commentary.title && commentary.title.toLowerCase().includes(searchTerm)) ||
+                    (commentary.commentary && commentary.commentary.toLowerCase().includes(searchTerm));
+                
                 const matchesBook = !selectedBook || commentary.book === selectedBook;
                 
                 return matchesSearch && matchesBook;
@@ -578,8 +568,6 @@
         }
 
         function displayCommentaries() {
-            const terms = getSearchTerms();
-
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
             const pageCommentaries = filteredCommentaries.slice(startIndex, endIndex);
@@ -608,12 +596,12 @@
                 return `
                     <div class="commentary-card">
                         <div class="commentary-header">
-                            <div class="commentary-reference">${highlightHtmlSafeMulti(commentary.reference, terms)}</div>
-                            <div class="commentary-book">${highlightHtmlSafeMulti(commentary.book, terms)}</div>
+                            <div class="commentary-reference">${escapeHtml(commentary.reference)}</div>
+                            <div class="commentary-book">${escapeHtml(commentary.book)}</div>
                         </div>
-                        ${commentary.title ? `<div class="commentary-title">${highlightHtmlSafeMulti(commentary.title, terms)}</div>` : ''}
+                        ${commentary.title ? `<div class="commentary-title">${escapeHtml(commentary.title)}</div>` : ''}
                         <div class="commentary-text ${needsReadMore ? 'collapsed' : ''}" id="text-${startIndex + index}">
-                            ${highlightHtmlSafeMulti(needsReadMore ? shortText + '...' : commentary.commentary, terms)}
+                            ${escapeHtml(needsReadMore ? shortText + '...' : commentary.commentary)}
                         </div>
                         ${needsReadMore ? `<div class="read-more" onclick="toggleReadMore(${startIndex + index})">Read More</div>` : ''}
                         <button class="note-button ${hasNote ? 'has-note' : ''}" onclick="openNoteModal(${index})" style="margin-top: 0.5rem;">
@@ -629,38 +617,28 @@
             displayPagination();
         }
 
-        
         function toggleReadMore(index) {
             const textDiv = document.getElementById(`text-${index}`);
             const commentary = filteredCommentaries[index];
-            const terms = getSearchTerms();
-
+            
             if (textDiv.classList.contains('collapsed')) {
                 textDiv.classList.remove('collapsed');
-                textDiv.innerHTML = highlightHtmlSafeMulti(commentary.commentary, terms);
-
+                textDiv.textContent = commentary.commentary;
+                
                 // Check if there's a note for this commentary
                 const notes = JSON.parse(localStorage.getItem('commentaryNotes') || '[]');
                 const noteKey = `${commentary.book}|${commentary.reference}`;
                 const existingNote = notes.find(n => n.commentaryKey === noteKey);
-
+                
                 if (existingNote) {
                     const noteDiv = document.createElement('div');
                     noteDiv.style.cssText = 'margin-top: 1.5rem; padding: 1rem; background: #fff9e6; border-left: 4px solid #f39c12; border-radius: 6px;';
                     noteDiv.innerHTML = `
                         <div style="font-weight: 700; color: #e67e22; margin-bottom: 0.5rem; font-size: 0.95rem;">📝 My Note:</div>
-                        <div style="color: #555; font-style: italic; line-height: 1.6;">${escapeHtml(existingNote.text)}</div>
+                        <div style="color: #555; font-style: italic; line-height: 1.6;">${existingNote.text}</div>
                     `;
                     textDiv.appendChild(noteDiv);
                 }
-
-                textDiv.nextElementSibling.textContent = 'Read Less';
-            } else {
-                textDiv.classList.add('collapsed');
-                textDiv.innerHTML = highlightHtmlSafeMulti(commentary.commentary.substring(0, 500) + '...', terms);
-                textDiv.nextElementSibling.textContent = 'Read More';
-            }
-        }
                 
                 textDiv.nextElementSibling.textContent = 'Read Less';
             } else {
@@ -728,44 +706,7 @@
             return div.innerHTML;
         }
 
-        
-
-        function escapeRegExp(str) {
-            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        }
-
-        // Split search input into individual terms (unique), ignoring extra whitespace
-        function getSearchTerms() {
-            const raw = (document.getElementById('searchInput')?.value || '').trim();
-            if (!raw) return [];
-            const parts = raw.split(/\s+/).map(t => t.trim()).filter(Boolean);
-
-            // Unique (case-insensitive), longest-first to avoid partial overlaps
-            const seen = new Set();
-            const unique = [];
-            for (const t of parts) {
-                const key = t.toLowerCase();
-                if (!seen.has(key)) {
-                    seen.add(key);
-                    unique.push(t);
-                }
-            }
-            unique.sort((a, b) => b.length - a.length);
-            return unique;
-        }
-
-        // Escapes HTML first, then highlights each search term safely
-        function highlightHtmlSafeMulti(text, terms) {
-            const escaped = escapeHtml(text || '');
-            if (!terms || terms.length === 0) return escaped;
-
-            const pattern = terms.map(t => escapeRegExp(t)).join('|');
-            if (!pattern) return escaped;
-
-            const re = new RegExp(`(${pattern})`, 'gi');
-            return escaped.replace(re, '<span class="highlight">$1</span>');
-        }
-// Search on Enter key
+        // Search on Enter key
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 filterCommentaries();
