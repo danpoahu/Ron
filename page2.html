@@ -563,6 +563,28 @@
             .then(csvData => {
                 parseCSV(csvData);
                 initializeApp();
+
+                // Check for URL params (e.g., from dashboard search click)
+                const urlParams = new URLSearchParams(window.location.search);
+                const kwParam = urlParams.get('keywords');
+                const bookParam = urlParams.get('book');
+                const refParam = urlParams.get('reference');
+
+                if (kwParam || bookParam || refParam) {
+                    if (kwParam) document.getElementById('keywords').value = kwParam;
+                    if (refParam) document.getElementById('referenceSearch').value = refParam;
+                    if (bookParam) {
+                        // Match by full name or abbreviation
+                        const bookSelect = document.getElementById('bookSelect');
+                        for (const opt of bookSelect.options) {
+                            if (opt.textContent === bookParam || opt.value === bookParam) {
+                                bookSelect.value = opt.value;
+                                break;
+                            }
+                        }
+                    }
+                    performAdvancedSearch();
+                }
             })
             .catch(error => {
                 console.error('Error loading CSV:', error);

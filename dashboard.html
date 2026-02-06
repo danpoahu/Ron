@@ -170,6 +170,19 @@
             margin-bottom: 1rem;
             border-radius: 6px;
             position: relative;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+
+        .note-card:hover {
+            background: #fff3cc;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .note-link {
+            font-size: 0.8rem;
+            color: var(--secondary-color);
+            margin-top: 0.5rem;
         }
 
         .note-reference {
@@ -454,17 +467,24 @@
                 const date = new Date(search.timestamp);
                 const timeAgo = getTimeAgo(date);
 
+                // Build URL params for page2
+                const params = new URLSearchParams();
+                if (search.keywords && search.keywords !== 'Any') params.set('keywords', search.keywords);
+                if (search.book && search.book !== 'All Books') params.set('book', search.book);
+                if (search.reference && search.reference !== 'Any') params.set('reference', search.reference);
+                const searchUrl = 'page2.html' + (params.toString() ? '?' + params.toString() : '');
+
                 return `
-                    <div class="recent-item">
+                    <a href="${searchUrl}" class="recent-item" style="display:block; text-decoration:none; color:inherit;">
                         <div class="recent-item-title">
                             ${search.keywords !== 'Any' ? `<span class="search-badge">${search.keywords}</span>` : ''}
                             ${search.book !== 'All Books' ? `<span class="search-badge">${search.book}</span>` : ''}
                             ${search.reference !== 'Any' ? `<span class="search-badge">${search.reference}</span>` : ''}
                         </div>
                         <div class="recent-item-meta">
-                            ${search.resultCount} results • ${timeAgo}
+                            ${search.resultCount} results • ${timeAgo} • <span style="color: var(--secondary-color);">Re-run →</span>
                         </div>
-                    </div>
+                    </a>
                 `;
             }).join('');
         }
@@ -487,13 +507,17 @@
                 const date = new Date(note.timestamp);
                 const formattedDate = date.toLocaleDateString() + ' at ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
+                // Link to the commentary in index.html using the reference
+                const noteUrl = 'index.html?ref=' + encodeURIComponent(note.reference);
+
                 return `
-                    <div class="note-card">
-                        <button class="note-delete" onclick="deleteNote(${index})" title="Delete note">×</button>
+                    <div class="note-card" style="cursor:pointer;" onclick="if(event.target.className!=='note-delete'){window.location.href='${noteUrl}'}">
+                        <button class="note-delete" onclick="event.stopPropagation(); deleteNote(${index})" title="Delete note">×</button>
                         <div class="note-reference">${note.book} - ${note.reference}</div>
                         ${note.title ? `<div style="font-size: 0.9rem; color: #7f8c8d; margin-bottom: 0.5rem; font-style: italic;">${note.title}</div>` : ''}
                         <div class="note-text">${note.text}</div>
                         <div class="note-date">Added ${formattedDate}</div>
+                        <div class="note-link">View Commentary →</div>
                     </div>
                 `;
             }).join('');

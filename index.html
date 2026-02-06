@@ -424,7 +424,16 @@
                 filteredCommentaries = [...allCommentaries];
                 populateBookFilter();
                 updateStats();
-                displayCommentaries();
+
+                // Check for URL params (e.g., from dashboard note click)
+                const urlParams = new URLSearchParams(window.location.search);
+                const refParam = urlParams.get('ref');
+                if (refParam) {
+                    document.getElementById('searchInput').value = refParam;
+                    filterCommentaries();
+                } else {
+                    displayCommentaries();
+                }
             } catch (error) {
                 console.error('Error loading commentaries:', error);
                 document.getElementById('commentaryList').innerHTML = 
