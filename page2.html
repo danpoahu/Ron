@@ -725,7 +725,7 @@
                 
                 const shortText = c.commentary.substring(0, 500);
                 const needsReadMore = c.commentary.length > 500;
-                let displayText = escapeHtml(needsReadMore ? shortText + '...' : c.commentary);
+                let displayText = renderCommentary(needsReadMore ? shortText + '...' : c.commentary);
 
                 // Then add highlighting if there are keywords
                 if (keywords) {
@@ -769,7 +769,7 @@
             
             if (textDiv.classList.contains('collapsed')) {
                 textDiv.classList.remove('collapsed');
-                textDiv.textContent = commentary.commentary;
+                textDiv.innerHTML = renderCommentary(commentary.commentary);
                 
                 // Check if there's a note for this commentary
                 const notes = JSON.parse(localStorage.getItem('commentaryNotes') || '[]');
@@ -789,7 +789,7 @@
                 textDiv.nextElementSibling.textContent = 'Read Less';
             } else {
                 textDiv.classList.add('collapsed');
-                textDiv.textContent = commentary.commentary.substring(0, 500) + '...';
+                textDiv.innerHTML = renderCommentary(commentary.commentary.substring(0, 500) + '...');
                 textDiv.nextElementSibling.textContent = 'Read More';
             }
         }
@@ -798,6 +798,14 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // Escape HTML but allow <i>, </i>, <b>, </b> tags for formatted commentary
+        function renderCommentary(text) {
+            let safe = escapeHtml(text);
+            safe = safe.replace(/&lt;i&gt;/g, '<i>').replace(/&lt;\/i&gt;/g, '</i>');
+            safe = safe.replace(/&lt;b&gt;/g, '<b>').replace(/&lt;\/b&gt;/g, '</b>');
+            return safe;
         }
 
         function resetSearch() {

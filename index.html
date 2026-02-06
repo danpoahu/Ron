@@ -601,7 +601,7 @@
                         </div>
                         ${commentary.title ? `<div class="commentary-title">${escapeHtml(commentary.title)}</div>` : ''}
                         <div class="commentary-text ${needsReadMore ? 'collapsed' : ''}" id="text-${startIndex + index}">
-                            ${escapeHtml(needsReadMore ? shortText + '...' : commentary.commentary)}
+                            ${renderCommentary(needsReadMore ? shortText + '...' : commentary.commentary)}
                         </div>
                         ${needsReadMore ? `<div class="read-more" onclick="toggleReadMore(${startIndex + index})">Read More</div>` : ''}
                         <button class="note-button ${hasNote ? 'has-note' : ''}" onclick="openNoteModal(${index})" style="margin-top: 0.5rem;">
@@ -623,7 +623,7 @@
             
             if (textDiv.classList.contains('collapsed')) {
                 textDiv.classList.remove('collapsed');
-                textDiv.textContent = commentary.commentary;
+                textDiv.innerHTML = renderCommentary(commentary.commentary);
                 
                 // Check if there's a note for this commentary
                 const notes = JSON.parse(localStorage.getItem('commentaryNotes') || '[]');
@@ -643,7 +643,7 @@
                 textDiv.nextElementSibling.textContent = 'Read Less';
             } else {
                 textDiv.classList.add('collapsed');
-                textDiv.textContent = commentary.commentary.substring(0, 500) + '...';
+                textDiv.innerHTML = renderCommentary(commentary.commentary.substring(0, 500) + '...');
                 textDiv.nextElementSibling.textContent = 'Read More';
             }
         }
@@ -704,6 +704,14 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // Escape HTML but allow <i>, </i>, <b>, </b> tags for formatted commentary
+        function renderCommentary(text) {
+            let safe = escapeHtml(text);
+            safe = safe.replace(/&lt;i&gt;/g, '<i>').replace(/&lt;\/i&gt;/g, '</i>');
+            safe = safe.replace(/&lt;b&gt;/g, '<b>').replace(/&lt;\/b&gt;/g, '</b>');
+            return safe;
         }
 
         // Search on Enter key
